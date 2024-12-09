@@ -1,0 +1,124 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "careunit",
+  "url": "http://example.org/fhir/StructureDefinition/CareUnit",
+  "name": "CareUnit",
+  "status": "draft",
+  "publisher": "Example Organization",
+  "description": "StructureDefinition for a custom CareUnit resource that models healthcare units such as clinics and wards.",
+  "fhirVersion": "4.0.1",
+  "kind": "complex-type",
+  "abstract": false,
+  "type": "CareUnit",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "CareUnit",
+        "path": "CareUnit",
+        "short": "A custom resource to represent healthcare units",
+        "definition": "A custom resource for modeling units in healthcare such as clinics, wards, or specialized care units.",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.id",
+        "path": "CareUnit.id",
+        "short": "Logical id of the resource",
+        "definition": "Unique identifier for the CareUnit resource.",
+        "min": 1,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.title",
+        "path": "CareUnit.title",
+        "short": "Title of the care unit",
+        "definition": "The title or name of the care unit.",
+        "min": 1,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.category",
+        "path": "CareUnit.category",
+        "short": "Type of care unit",
+        "definition": "The type of care unit, such as clinic, ward, or department.",
+        "min": 1,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.identifier",
+        "path": "CareUnit.identifier",
+        "short": "Unique identifier for the care unit",
+        "definition": "A unique identifier string for the care unit.",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.description",
+        "path": "CareUnit.description",
+        "short": "Description of the care unit",
+        "definition": "Additional details about the care unit.",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.parentOrganization",
+        "path": "CareUnit.parentOrganization",
+        "short": "Parent organization of the care unit",
+        "definition": "The organization that oversees this care unit.",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.facility",
+        "path": "CareUnit.facility",
+        "short": "Details of the facility associated with the care unit",
+        "definition": "Facility details including address, coordinates, and label.",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.contacts",
+        "path": "CareUnit.contacts",
+        "short": "Contact details for the care unit",
+        "definition": "Details for contacting the care unit, such as phone or email.",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "id": "CareUnit.servicesProvided",
+        "path": "CareUnit.servicesProvided",
+        "short": "Services offered by the care unit",
+        "definition": "A list of services provided by the care unit.",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "id": "CareUnit.chief",
+        "path": "CareUnit.chief",
+        "short": "Chief or head of the care unit",
+        "definition": "Details of the person in charge of the care unit.",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "CareUnit.operationHours",
+        "path": "CareUnit.operationHours",
+        "short": "Operating hours of the care unit",
+        "definition": "Days and times the care unit is operational.",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "id": "CareUnit.capacityDetails",
+        "path": "CareUnit.capacityDetails",
+        "short": "Capacity details of the care unit",
+        "definition": "Information about room availability, staff count, and other capacity metrics.",
+        "min": 0,
+        "max": "1"
+      }
+    ]
+  }
+}
+

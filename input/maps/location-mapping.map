@@ -1,0 +1,2 @@
+map "http://example.org/fhir/StructureMap/location-mapping" = "LocationMapping" // example.org just a place holder (will be passed to -ig parameter)
+
