@@ -1,2 +1,74 @@
-map "http://example.org/fhir/StructureMap/location-mapping" = "LocationMapping" // example.org just a place holder (will be passed to -ig parameter)
+/// url = "http://example.org/fhir/StructureMap/location-mapping" // example.org just as a place holder (will be passed to -ig parameter)
+/// name = "LocationMapping"
+/// title = "FML Conversion for CareUnit to Location"
 
+uses "http://example.org/fhir/StructureDefinition/CareUnit" alias CareUnit as source
+uses "http://hl7.org/fhir/StructureDefinition/Location" alias Location as target
+
+group RootContent(source src : CareUnit, target tgt : Location) {
+  src -> tgt.status = ("draft") "status";
+  src.identifier as identifier -> tgt.value = create("Identifier") as id, id.value = identifier "identifiers";
+  src.title as title -> tgt.name = title "namings";
+  src.category as category -> tgt.alias = category
+  src.facility as facility -> tgt as loc then FacilityToType(facility, loc); // FHIR's own terminology (CodeSystem)s does not have a definition for location types (e.g. Clinic), so we use the SNOMED-CT.
+  src.description as description -> tgt.description = description "descriptions";
+  src.facility as facility -> tgt as loc then FacilityAddressConvert(facility, loc);
+  src.facility as facility -> tgt as loc then FacilityCoordinatesToPosition(facility, loc);
+  src.contacts as contacts -> tgt as loc then ContactConvert(contacts, loc);
+  src.operationHours as oph -> tgt as loc then OperationHoursConvert(oph, loc);
+    
+}
+
+group FacilityToType(source src, target tgt : Location) {
+  src.facility as facility then {
+   facility.label -> tgt.type = cc('http://snomed.info/sct','702887001', 'Neurology clinic') "category-concept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
+  } 
+}
+
+group FacilityAddressConvert(source src, target tgt : Location) {
+  src.facility as facility then {
+    facility.addressDetails as adrsd then {
+      adrsd.street as street, adrsd.locality as locality, adrsd.region as region, adrsd.postalCode as postalCode, adrsd.nation as nation -> tgt.address = create("Address") as adrs then {
+       adrs.line = street.combine(', ') + ',' + locality "addresses"; // street is a list in source so we join items on ', '
+       adrs.district = region "regions";
+       adrs.postalCode = postalCode "postalcodes";
+       adrs.country = nation "countries";
+      }
+    }
+  }
+}
+
+group FacilityCoordinatesToPosition(source src, target tgt : Location) {
+  src.facility as facility then {
+    facility.coordinates as coordinates then {
+      coordinates.latitude as latitude, coordinates.longitude as longitude -> tgt.position = create("BackboneElement") as position then { 
+        position.latitude = latitude.toDecimal() "latitudes"; 
+        postion.longitude = longitude.toDecimal() "longitudes";
+      }
+    }
+  }
+}
+
+group ContactConvert(source src, target tgt: Location) { // Only the telecom field (type ContactPoint) of ExtendedContactDetail will be filled.
+  src.contacts as contacts for each c then { // Iterate over list of contacts. In the below expression += means creating ExtendedContactDetail object with regard to number of contacts item in source.
+    c.meduim as medium, c.details as details, c.usage as usage -> tgt.contact += create("ExtendedContactDetail") as extcd then {
+      extcd.telecom += create("ContactPoint") as cp then {
+        cp.system = medium "systems"; // FHIR own terminology for contact system and contact use see (http://hl7.org/fhir/contact-point-system) and (http://hl7.org/fhir/contact-point-use)
+        cp.value = details "details"
+        cp.use = usage "usage";
+      }
+    }
+  }
+}
+
+group OperationHoursConvert(source src, target tgt: Location) {
+  src.operationHours as oph for each o then {
+    oph.days as days, oph.openTime as opentime, oph.closeTime as closetime -> tgt.hoursOfOperation += create("Availability") as avl then {
+      avl.availableTime += create("Availability.availableTime") as availableTime then {
+        availableTime.daysOfWeek = days "opendays"
+        availableTime.availableStartTime = opentime "opentimes";
+        availableTime.availableEndTime = closetime "closetimes";
+      }
+    }
+  }
+}

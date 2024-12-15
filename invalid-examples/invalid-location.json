@@ -1,78 +1,61 @@
 {
-  "resourceType": "CareUnit",
-  "id": "careunit-789",
-  "title": "Neurology Clinic",
-  "category": "Clinic",
-  "identifier": "NEURO-CLINIC",
-  "description": "Focused on neurological care, including diagnostics, outpatient services, and follow-up care for neurological disorders.",
-  "parentOrganization": {
-    "id": "org-987",
-    "name": "Metro Health Network",
-    "category": "Healthcare System"
-  },
-  "facility": {
-    "id": "loc-321",
-    "label": "Neurology Center",
-    "addressDetails": {
-      "street": ["456 Brain Blvd", "Suite 300"],
-      "locality": "Springfield",
-      "region": "IL",
-      "postalCode": "62701",
-      "nation": "USA"
-    },
-    "coordinates": {
-      "latitude": 39.7817,
-      "longitude": -89.6501
-    }
-  },
-  "contacts": [
-    {
-      "medium": "phone",
-      "details": "555-6789",
-      "usage": "work"
-    },
-    {
-      "medium": "email",
-      "details": "neurology@metrohealth.org",
-      "usage": "work"
-    }
-  ],
-  "servicesProvided": [
-    {
-      "serviceName": "EEG Testing",
-      "details": "Electroencephalography for monitoring brain activity."
-    },
-    {
-      "serviceName": "Stroke Management",
-      "details": "Comprehensive care for stroke patients."
-    }
-  ],
-  "chief": {
-    "id": "staff-002",
-    "fullName": "Dr. John Smith",
-    "designation": "Chief Neurologist",
-    "contactInfo": {
-      "medium": "phone",
-      "details": "555-9012",
-      "usage": "work"
-    }
-  },
-  "operationHours": [
-    {
-      "days": ["monday", "wednesday", "friday"],
-      "openTime": "09:00",
-      "closeTime": "17:00"
-    },
-    {
-      "days": ["tuesday", "thursday"],
-      "openTime": "10:00",
-      "closeTime": "16:00"
-    }
-  ],
-  "capacityDetails": {
-    "consultationRooms": 8,
-    "occupiedRooms": 4,
-    "staffAvailable": 15
-  }
+   "resourceType":"CareUnit",
+   "id":"careunit-789",
+   "title":"Neurology Clinic",
+   "category":"Clinic",
+   "identifier":"NEURO-CLINIC",
+   "description":"Focused on neurological care, including diagnostics, outpatient services, and follow-up care for neurological disorders.",
+   "parentOrganization":{
+      "id":"org-987",
+      "name":"Metro Health Network",
+      "category":"Healthcare System"
+   },
+   "facility":{
+      "label":"Neurology Center",
+      "addressDetails":{
+         "street":[
+            "456 Brain Blvd",
+            "Suite 300"
+         ],
+         "locality":"Springfield",
+         "region":"IL",
+         "postalCode":"62701",
+         "nation":"USA"
+      },
+      "coordinates":{
+         "latitude":39.7817,
+         "longitude":-89.6501
+      }
+   },
+   "contacts":[
+      {
+         "medium":"phone",
+         "details":"555-6789",
+         "usage":"work"
+      },
+      {
+         "medium":"email",
+         "details":"neurology@metrohealth.org",
+         "usage":"work"
+      }
+   ],
+   "operationHours":[
+      {
+         "days":[
+            "mon",
+            "wed",
+            "fri"
+         ],
+         "openTime":"09:00",
+         "closeTime":"17:00"
+      },
+      {
+         "days":[
+            "tue",
+            "thu"
+         ],
+         "openTime":"10:00",
+         "closeTime":"16:00"
+      }
+   ]
 }
-
