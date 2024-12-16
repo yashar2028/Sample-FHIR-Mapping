@@ -1,15 +1,18 @@
-map "http://example.org/fhir/StructureMap/location-mapping" // example.org just as a place holder (will be passed to -ig parameter)
-/// name = "LocationMapping"
-/// title = "FML Conversion for CareUnit to Location"
+map "http://example.org/fhir/StructureMap/location-mapping" = "locmapping" // example.org just as a place holder (will be passed to -ig parameter)
+
+// Metadata for reference (not parsed by the tool):
+// url = "http://example.org/fhir/StructureMap/location-mapping"
+// name = "LocationMapping"
+// title = "FML Conversion for CareUnit to Location"
 
 uses "http://example.org/fhir/StructureDefinition/CareUnit" alias CareUnit as source
 uses "http://hl7.org/fhir/StructureDefinition/Location" alias Location as target
 
 group RootContent(source src : CareUnit, target tgt : Location) {
-  src -> tgt.status = ("draft") "status";
+  src -> tgt.status = "draft" "status";
   src.identifier as identifier -> tgt.value = create("Identifier") as id, id.value = identifier "identifiers";
   src.title as title -> tgt.name = title "namings";
-  src.category as category -> tgt.alias = category
+  src.category as category -> tgt.alias = category;
   src.facility as facility -> tgt as loc then FacilityToType(facility, loc); // FHIR's own terminology (CodeSystem)s does not have a definition for location types (e.g. Clinic), so we use the SNOMED-CT.
   src.description as description -> tgt.description = description "descriptions";
   src.parentOrganization as po -> tgt as loc then ParentOrganizationToManagingOrganization(po, loc);
@@ -22,13 +25,13 @@ group RootContent(source src : CareUnit, target tgt : Location) {
 
 group FacilityToType(source src, target tgt : Location) {
   src.facility as facility then {
-   facility.label -> tgt.type = cc('http://snomed.info/sct','702887001', 'Neurology clinic') "category-concept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
+    facility.label -> tgt.type = cc('http://snomed.info/sct','702887001', 'Neurology clinic') "category-concept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
   }; 
 }
 
-ParentOrganizationToManagingOrganization(source src, target tgt : Location {
+group ParentOrganizationToManagingOrganization(source src, target tgt : Location) {
   src.parentOrganization as po -> tgt.managingOrganization = create("Reference") as mo then {
-    mo.reference = "Organization/" + org.id "references";// Reference to a Organization resource
+    mo.reference = "Organization/" + po.id "references"; // Reference to a Organization resource
     mo.display = po.name "org";
   };
 }
@@ -37,10 +40,10 @@ group FacilityAddressConvert(source src, target tgt : Location) {
   src.facility as facility then {
     facility.addressDetails as adrsd then {
       adrsd.street as street, adrsd.locality as locality, adrsd.region as region, adrsd.postalCode as postalCode, adrsd.nation as nation -> tgt.address = create("Address") as adrs then {
-       adrs.line = street.combine(', ') + ',' + locality "addresses"; // street is a list in source so we join items on ', '
-       adrs.district = region "regions";
-       adrs.postalCode = postalCode "postalcodes";
-       adrs.country = nation "countries";
+        adrs.line = street.combine(', ') + ',' + locality "addresses"; // street is a list in source so we join items on ', '
+        adrs.district = region "regions";
+        adrs.postalCode = postalCode "postalcodes";
+        adrs.country = nation "countries";
       };
     };
   };
@@ -59,10 +62,10 @@ group FacilityCoordinatesToPosition(source src, target tgt : Location) {
 
 group ContactConvert(source src, target tgt: Location) { // Only the telecom field (type ContactPoint) of ExtendedContactDetail will be filled.
   src.contacts as contacts for each c then { // Iterate over list of contacts. In the below expression += means creating ExtendedContactDetail object with regard to number of contacts item in source.
-    c.meduim as medium, c.details as details, c.usage as usage -> tgt.contact += create("ExtendedContactDetail") as extcd then {
+    c.medium as medium, c.details as details, c.usage as usage -> tgt.contact += create("ExtendedContactDetail") as extcd then {
       extcd.telecom += create("ContactPoint") as cp then {
         cp.system = medium "systems"; // FHIR own terminology for contact system and contact use see (http://hl7.org/fhir/contact-point-system) and (http://hl7.org/fhir/contact-point-use)
-        cp.value = details "details"
+        cp.value = details "details";
         cp.use = usage "usage";
       };
     };
@@ -73,7 +76,7 @@ group OperationHoursConvert(source src, target tgt: Location) {
   src.operationHours as oph for each o then {
     oph.days as days, oph.openTime as opentime, oph.closeTime as closetime -> tgt.hoursOfOperation += create("Availability") as avl then {
       avl.availableTime += create("Availability.availableTime") as availableTime then {
-        availableTime.daysOfWeek = days "opendays"
+        availableTime.daysOfWeek = days "opendays";
         availableTime.availableStartTime = opentime "opentimes";
         availableTime.availableEndTime = closetime "closetimes";
       };
