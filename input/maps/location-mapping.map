@@ -12,6 +12,7 @@ group RootContent(source src : CareUnit, target tgt : Location) {
   src.category as category -> tgt.alias = category
   src.facility as facility -> tgt as loc then FacilityToType(facility, loc); // FHIR's own terminology (CodeSystem)s does not have a definition for location types (e.g. Clinic), so we use the SNOMED-CT.
   src.description as description -> tgt.description = description "descriptions";
+  src.parentOrganization as po -> tgt as loc then ParentOrganizationToManagingOrganization(po, loc);
   src.facility as facility -> tgt as loc then FacilityAddressConvert(facility, loc);
   src.facility as facility -> tgt as loc then FacilityCoordinatesToPosition(facility, loc);
   src.contacts as contacts -> tgt as loc then ContactConvert(contacts, loc);
@@ -22,7 +23,14 @@ group RootContent(source src : CareUnit, target tgt : Location) {
 group FacilityToType(source src, target tgt : Location) {
   src.facility as facility then {
    facility.label -> tgt.type = cc('http://snomed.info/sct','702887001', 'Neurology clinic') "category-concept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
-  } 
+  }; 
+}
+
+ParentOrganizationToManagingOrganization(source src, target tgt : Location {
+  src.parentOrganization as po -> tgt.managingOrganization = create("Reference") as mo then {
+    mo.reference = "Organization/" + org.id "references";// Reference to a Organization resource
+    mo.display = po.name "org";
+  };
 }
 
 group FacilityAddressConvert(source src, target tgt : Location) {
@@ -33,9 +41,9 @@ group FacilityAddressConvert(source src, target tgt : Location) {
        adrs.district = region "regions";
        adrs.postalCode = postalCode "postalcodes";
        adrs.country = nation "countries";
-      }
-    }
-  }
+      };
+    };
+  };
 }
 
 group FacilityCoordinatesToPosition(source src, target tgt : Location) {
@@ -44,9 +52,9 @@ group FacilityCoordinatesToPosition(source src, target tgt : Location) {
       coordinates.latitude as latitude, coordinates.longitude as longitude -> tgt.position = create("BackboneElement") as position then { 
         position.latitude = latitude.toDecimal() "latitudes"; 
         postion.longitude = longitude.toDecimal() "longitudes";
-      }
-    }
-  }
+      };
+    };
+  };
 }
 
 group ContactConvert(source src, target tgt: Location) { // Only the telecom field (type ContactPoint) of ExtendedContactDetail will be filled.
@@ -56,9 +64,9 @@ group ContactConvert(source src, target tgt: Location) { // Only the telecom fie
         cp.system = medium "systems"; // FHIR own terminology for contact system and contact use see (http://hl7.org/fhir/contact-point-system) and (http://hl7.org/fhir/contact-point-use)
         cp.value = details "details"
         cp.use = usage "usage";
-      }
-    }
-  }
+      };
+    };
+  };
 }
 
 group OperationHoursConvert(source src, target tgt: Location) {
@@ -68,7 +76,7 @@ group OperationHoursConvert(source src, target tgt: Location) {
         availableTime.daysOfWeek = days "opendays"
         availableTime.availableStartTime = opentime "opentimes";
         availableTime.availableEndTime = closetime "closetimes";
-      }
-    }
-  }
+      };
+    };
+  };
 }

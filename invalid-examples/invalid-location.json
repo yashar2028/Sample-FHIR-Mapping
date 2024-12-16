@@ -7,8 +7,7 @@
    "description":"Focused on neurological care, including diagnostics, outpatient services, and follow-up care for neurological disorders.",
    "parentOrganization":{
       "id":"org-987",
-      "name":"Metro Health Network",
-      "category":"Healthcare System"
+      "name":"Metro Health Network"
    },
    "facility":{
       "label":"Neurology Center",
