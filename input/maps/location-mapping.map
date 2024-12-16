@@ -1,4 +1,4 @@
-/// url = "http://example.org/fhir/StructureMap/location-mapping" // example.org just as a place holder (will be passed to -ig parameter)
+map "http://example.org/fhir/StructureMap/location-mapping" // example.org just as a place holder (will be passed to -ig parameter)
 /// name = "LocationMapping"
 /// title = "FML Conversion for CareUnit to Location"
 
