@@ -50,8 +50,8 @@ group FacilityCoordinatesToPosition(source src, target tgt : Location) {
   src.facility as facility then {
     facility.coordinates as coordinates then {
       coordinates.latitude as latitude, coordinates.longitude as longitude -> tgt.position = create("BackboneElement") as position then { 
-        position.latitude = latitude.toDecimal() "latitudes"; 
-        postion.longitude = longitude.toDecimal() "longitudes";
+        position.latitude = latitude "latitudes"; 
+        position.longitude = longitude "longitudes";
       };
     };
   };
