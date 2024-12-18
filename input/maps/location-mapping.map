@@ -10,9 +10,9 @@ uses "http://hl7.org/fhir/StructureDefinition/Location" alias Location as target
 
 group RootContent(source src : CareUnit, target tgt : Location) {
   src -> tgt.status = "draft" "status";
-  src.identifier as identifier -> tgt.value = create("Identifier") as id, id.value = identifier "identifiers";
+  src.identifier as identifier -> tgt.identifier = create("Identifier") as id, id.value = identifier "identifiers";
   src.title as title -> tgt.name = title "namings";
-  src.category as category -> tgt.alias = category;
+  src.category as category -> tgt.alias = category "categories";
   src.facility as facility -> tgt as loc then FacilityToType(facility, loc); // FHIR's own terminology (CodeSystem)s does not have a definition for location types (e.g. Clinic), so we use the SNOMED-CT.
   src.description as description -> tgt.description = description "descriptions";
   src.parentOrganization as po -> tgt as loc then ParentOrganizationToManagingOrganization(po, loc);
@@ -25,61 +25,50 @@ group RootContent(source src : CareUnit, target tgt : Location) {
 
 group FacilityToType(source src, target tgt : Location) {
   src.facility as facility then {
-    facility.label -> tgt.type = cc('http://snomed.info/sct','702887001', 'Neurology clinic') "category-concept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
-  }; 
+    facility.label as label -> tgt.type = cc('http://snomed.info/sct','702887001', label) "categoryconcept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
+  } "c0"; 
 }
 
 group ParentOrganizationToManagingOrganization(source src, target tgt : Location) {
-  src.parentOrganization as po -> tgt.managingOrganization = create("Reference") as mo then {
-    mo.reference = "Organization/" + po.id "references"; // Reference to a Organization resource
-    mo.display = po.name "org";
-  };
+  src.parentOrganization -> tgt.managingOrganization = create("Reference") as mo then {
+    src.parentOrganization as po -> mo.reference = po.id "refrences"; 
+    src.parentOrganization as po -> mo.display = po.name "displays";
+  } "c1";
 }
 
 group FacilityAddressConvert(source src, target tgt : Location) {
-  src.facility as facility then {
-    facility.addressDetails as adrsd then {
-      adrsd.street as street, adrsd.locality as locality, adrsd.region as region, adrsd.postalCode as postalCode, adrsd.nation as nation -> tgt.address = create("Address") as adrs then {
-        adrs.line = street.combine(', ') + ',' + locality "addresses"; // street is a list in source so we join items on ', '
-        adrs.district = region "regions";
-        adrs.postalCode = postalCode "postalcodes";
-        adrs.country = nation "countries";
-      };
-    };
-  };
+  src.facility as facility then {  
+    facility.addressDetail as adrsd -> tgt.address = create("Address") as adrs then {
+      adrsd.street as street, adrsd.locality as locality-> adrs.line = street "addresses"; // street is a list in source so we join items on ', '
+      adrsd.region as region -> adrs.district = region "regions";
+      adrsd.postalCode as postalcode -> adrs.postalCode = postalcode "postalcodes";
+      adrsd.nation as nation -> adrs.country = nation "countries";
+    } "c2";
+  } "c3";
 }
 
 group FacilityCoordinatesToPosition(source src, target tgt : Location) {
   src.facility as facility then {
-    facility.coordinates as coordinates then {
-      coordinates.latitude as latitude, coordinates.longitude as longitude -> tgt.position = create("BackboneElement") as position then { 
-        position.latitude = latitude "latitudes"; 
-        position.longitude = longitude "longitudes";
-      };
-    };
-  };
+    facility.coordinates as coordinates -> tgt.position = create("BackboneElement") as position then { 
+      coordinates.latitude as latitude -> position.latitude = latitude "latitudes"; 
+      coordinates.longitude as longitude -> position.longitude = longitude "longitudes";
+    } "c4";
+  } "c5"; 
 }
 
+// Iterate over list of contacts. In the below expression += means creating ExtendedContactDetail object with regard to number of contacts item in source.
 group ContactConvert(source src, target tgt: Location) { // Only the telecom field (type ContactPoint) of ExtendedContactDetail will be filled.
-  src.contacts as contacts for each c then { // Iterate over list of contacts. In the below expression += means creating ExtendedContactDetail object with regard to number of contacts item in source.
-    c.medium as medium, c.details as details, c.usage as usage -> tgt.contact += create("ExtendedContactDetail") as extcd then {
-      extcd.telecom += create("ContactPoint") as cp then {
-        cp.system = medium "systems"; // FHIR own terminology for contact system and contact use see (http://hl7.org/fhir/contact-point-system) and (http://hl7.org/fhir/contact-point-use)
-        cp.value = details "details";
-        cp.use = usage "usage";
-      };
-    };
-  };
+  src.contacts as c -> tgt.contact = create("ExtendedContactDetail") as extcd, extcd.telecom = create("ContactPoint") as cp then {
+    c.medium as medium -> cp.system = medium "systems";
+    c.details as details -> cp.value = details "details";
+    c.usage as usage -> cp.use = usage "usage";
+  } "c6";
 }
 
 group OperationHoursConvert(source src, target tgt: Location) {
-  src.operationHours as oph for each o then {
-    oph.days as days, oph.openTime as opentime, oph.closeTime as closetime -> tgt.hoursOfOperation += create("Availability") as avl then {
-      avl.availableTime += create("Availability.availableTime") as availableTime then {
-        availableTime.daysOfWeek = days "opendays";
-        availableTime.availableStartTime = opentime "opentimes";
-        availableTime.availableEndTime = closetime "closetimes";
-      };
-    };
-  };
+  src.operationHours as oph -> tgt.hoursOfOperation = create("Availability") as avl, avl.availableTime = create("Availability.availableTime") as availableTime then {
+    oph.days as days -> availableTime.daysOfWeek = days "opendays";
+    oph.openTime as opentime -> availableTime.availableStartTime = opentime "opentimes";
+    oph.closeTime as closetime -> availableTime.availableEndTime = closetime "closetimes";
+  } "c7";
 }
