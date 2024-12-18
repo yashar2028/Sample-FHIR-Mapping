@@ -1,5 +1,5 @@
 # Sample-FHIR-Mapping
-This is a very simple example of mapping from an invalid Care-Unit resource to FHIR Location resource using the FHIR Mapping Language (FML). The exact rules are also implemented in python ([notebook](https://github.com/yashar2028/Sample-FHIR-Mapping/conversion.ipynb)). 
+This is a very simple example of mapping from an invalid Care-Unit resource to FHIR Location resource using the FHIR Mapping Language (FML). The exact rules are also implemented in python ([notebook](https://github.com/yashar2028/Sample-FHIR-Mapping/blob/main/convertion.ipynb)). 
 
 [See the map file](https://github.com/yashar2028/Sample-FHIR-Mapping/tree/main/input/maps)
 
@@ -38,7 +38,7 @@ Along with API clients such as Insomnia or Postman, python fhir client and serve
 3- Using python and [fhir.resources](https://pypi.org/project/fhir.resources) module to directly perform the mapping. This is of course the fastest and most straightforward approach which is also used here.
 
 ## Explanation
-You can find the generated StructureMap resource [here](https://github.com/yashar2028/Sample-FHIR-Mapping/blob/main/output/map.json). Note that the validator tool generated this StructureMap in FHIR R4 definition (so validate against R4 validator). However, the Location resource used inside this StructureMap is FHIR R5 definition. The validator may raise issue regarding this incompatibility (e.g. Location.contact in R5 is location.telecome in R4 (with different type)), so the best practise was to use the R4 definition of Location resource as well. The StructureMap in R5 was valid and compatible with map file which also passed the [compiler](https://www.antvaset.com/fhir-mapping-language-compiler). [Generated output](https://github.com/yashar2028/Sample-FHIR-Mapping/blob/main/output/map.json) from the python script was validated using https://validator.fhir.org.
+You can find the generated StructureMap resource [here](https://github.com/yashar2028/Sample-FHIR-Mapping/blob/main/output/map.json). Note that the validator tool generated this StructureMap in FHIR R4 definition (so validate against R4 validator). However, the Location resource used inside this StructureMap is FHIR R5 definition. The validator may raise issue regarding this incompatibility (e.g. Location.contact in R5 is location.telecome in R4 (with different type)), so the best practise was to use the R4 definition of Location resource as well. The StructureMap in R5 was valid and compatible with map file which also passed the [compiler](https://www.antvaset.com/fhir-mapping-language-compiler). [Generated output](https://github.com/yashar2028/Sample-FHIR-Mapping/blob/main/output/mappedresult.json) from the python script was validated using https://validator.fhir.org.
 
 ### Considarations when using validator tool:
 Mapping engine was not able to read the status metadata for StructureMap so it was manually added. I changed '///' to '//' since validator tool was not able to parse the metadata information.
@@ -49,6 +49,6 @@ When invoking the `$convert` with validator tool there are possibilities that it
 ## Notes
 - This project uses the [HAPI FHIR Validator Tool](https://github.com/hapifhir/org.hl7.fhir.core) (version 6.5.1) only to convert the mapping file to corresponding StructureMap resource.
 - [FHIRPath](https://build.fhir.org/ig/HL7/FHIRPath/) expressions in the mapping file can be potentially used to improve the type safety and control flow.
-- The main purpose of this mapping is to provide a possible an example on possible usage of FML and serve as a reference.
+- The main purpose of this mapping is to provide an example on possible usage of FML and serve as a reference.
 - This mapping is not under any IG, package or organization.
 
