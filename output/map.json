@@ -1,0 +1,743 @@
+{
+  "resourceType" : "StructureMap",
+  "id" : "location-mapping",
+  "text" : {
+    "status" : "additional",
+    "div" : "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://example.org/fhir/StructureMap/location-mapping&quot; = &quot;locmapping&quot; // example.org just as a place holder (will be passed to -ig parameter)\n\n// Meta:\n// url = &quot;http://example.org/fhir/StructureMap/location-mapping&quot;\n// name = &quot;LocationMapping&quot;\n// title = &quot;FML Conversion for CareUnit to Location&quot;\n// status = &quot;draft&quot;\n\nuses &quot;http://example.org/fhir/StructureDefinition/CareUnit&quot; alias CareUnit as source\nuses &quot;http://hl7.org/fhir/StructureDefinition/Location&quot; alias Location as target\n\ngroup RootContent(source src : CareUnit, target tgt : Location) {\n  src -&gt; tgt.status = &quot;active&quot; &quot;status&quot;;\n  src.identifier as identifier -&gt; tgt.identifier = create(&quot;Identifier&quot;) as id, id.value = identifier &quot;identifiers&quot;;\n  src.title as title -&gt; tgt.name = title &quot;namings&quot;;\n  src.category as category -&gt; tgt.alias = category &quot;categories&quot;;\n  src.facility as facility -&gt; tgt as loc then FacilityToType(facility, loc); // FHIR's own terminology (CodeSystem)s does not have a definition for location types (e.g. Clinic), so we use the SNOMED-CT.\n  src.description as description -&gt; tgt.description = description &quot;descriptions&quot;;\n  src.parentOrganization as po -&gt; tgt as loc then ParentOrganizationToManagingOrganization(po, loc);\n  src.facility as facility -&gt; tgt as loc then FacilityAddressConvert(facility, loc);\n  src.facility as facility -&gt; tgt as loc then FacilityCoordinatesToPosition(facility, loc);\n  src.contacts as contacts -&gt; tgt as loc then ContactConvert(contacts, loc);\n  src.operationHours as oph -&gt; tgt as loc then OperationHoursConvert(oph, loc);\n    \n}\n\ngroup FacilityToType(source src, target tgt : Location) {\n  src.facility as facility then {\n    facility.label as label -&gt; tgt.type = cc('http://snomed.info/sct','702887001', 'Neurology clinic') &quot;categoryconcept&quot;; // Construct a CodeableConcept model with (&lt;codesystem url&gt;,&lt;code&gt;,&lt;display&gt;) \n  } &quot;c0&quot;; \n}\n\ngroup ParentOrganizationToManagingOrganization(source src, target tgt : Location) {\n  src.parentOrganization -&gt; tgt.managingOrganization = create(&quot;Reference&quot;) as mo then {\n    src.parentOrganization as po -&gt; mo.reference = po.id &quot;refrences&quot;; \n    src.parentOrganization as po -&gt; mo.display = po.name &quot;displays&quot;;\n  } &quot;c1&quot;;\n}\n\ngroup FacilityAddressConvert(source src, target tgt : Location) {\n  src.facility as facility then {  \n    facility.addressDetail as adrsd -&gt; tgt.address = create(&quot;Address&quot;) as adrs then {\n      adrsd.street as street -&gt; adrs.line = street &quot;addresses&quot;; // street is a list and is directly passed\n      adrsd.locality as locality -&gt; adrs.city = locality &quot;cities&quot;;\n      adrsd.region as region -&gt; adrs.district = region &quot;regions&quot;;\n      adrsd.postalCode as postalcode -&gt; adrs.postalCode = postalcode &quot;postalcodes&quot;;\n      adrsd.nation as nation -&gt; adrs.country = nation &quot;countries&quot;;\n    } &quot;c2&quot;;\n  } &quot;c3&quot;;\n}\n\ngroup FacilityCoordinatesToPosition(source src, target tgt : Location) {\n  src.facility as facility then {\n    facility.coordinates as coordinates -&gt; tgt.position = create(&quot;BackboneElement&quot;) as position then { \n      coordinates.latitude as latitude -&gt; position.latitude = latitude &quot;latitudes&quot;; \n      coordinates.longitude as longitude -&gt; position.longitude = longitude &quot;longitudes&quot;;\n    } &quot;c4&quot;;\n  } &quot;c5&quot;; \n}\n\ngroup ContactConvert(source src, target tgt: Location) { // Only the telecom field (type ContactPoint) of ExtendedContactDetail will be filled.\n  src.contacts as c -&gt; tgt.contact = create(&quot;ExtendedContactDetail&quot;) as extcd, extcd.telecom = create(&quot;ContactPoint&quot;) as cp then {\n    c.medium as medium -&gt; cp.system = medium &quot;systems&quot;;\n    c.details as details -&gt; cp.value = details &quot;details&quot;;\n    c.usage as usage -&gt; cp.use = usage &quot;usage&quot;;\n  } &quot;c6&quot;;\n}\n\ngroup OperationHoursConvert(source src, target tgt: Location) {\n  src.operationHours as oph -&gt; tgt.hoursOfOperation = create(&quot;Availability&quot;) as avl, avl.availableTime = create(&quot;Availability.availableTime&quot;) as availableTime then {\n    oph.days as days -&gt; availableTime.daysOfWeek = days &quot;opendays&quot;;\n    oph.openTime as opentime -&gt; availableTime.availableStartTime = opentime &quot;opentimes&quot;;\n    oph.closeTime as closetime -&gt; availableTime.availableEndTime = closetime &quot;closetimes&quot;;\n  } &quot;c7&quot;;\n}\n</pre></div>"
+  },
+  "url" : "http://example.org/fhir/StructureMap/location-mapping",
+  "name" : "locmapping",
+  "status": "draft",
+  "structure" : [{
+    "url" : "http://example.org/fhir/StructureDefinition/CareUnit",
+    "mode" : "source",
+    "alias" : "CareUnit"
+  },
+  {
+    "url" : "http://hl7.org/fhir/StructureDefinition/Location",
+    "mode" : "target",
+    "alias" : "Location"
+  }],
+  "group" : [{
+    "name" : "RootContent",
+    "typeMode" : "none",
+    "input" : [{
+      "name" : "src",
+      "type" : "CareUnit",
+      "mode" : "source"
+    },
+    {
+      "name" : "tgt",
+      "type" : "Location",
+      "mode" : "target"
+    }],
+    "rule" : [{
+      "name" : "status",
+      "source" : [{
+        "context" : "src"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "status",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueString" : "active"
+        }]
+      }]
+    },
+    {
+      "name" : "identifiers",
+      "source" : [{
+        "context" : "src",
+        "element" : "identifier",
+        "variable" : "identifier"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "identifier",
+        "variable" : "id",
+        "transform" : "create",
+        "parameter" : [{
+          "valueString" : "Identifier"
+        }]
+      },
+      {
+        "context" : "id",
+        "contextType" : "variable",
+        "element" : "value",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "identifier"
+        }]
+      }]
+    },
+    {
+      "name" : "namings",
+      "source" : [{
+        "context" : "src",
+        "element" : "title",
+        "variable" : "title"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "name",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "title"
+        }]
+      }]
+    },
+    {
+      "name" : "categories",
+      "source" : [{
+        "context" : "src",
+        "element" : "category",
+        "variable" : "category"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "alias",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "category"
+        }]
+      }]
+    },
+    {
+      "name" : "facility",
+      "source" : [{
+        "context" : "src",
+        "element" : "facility",
+        "variable" : "facility"
+      }],
+      "target" : [{
+        "contextType" : "variable",
+        "variable" : "loc",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "tgt"
+        }]
+      }],
+      "dependent" : [{
+        "name" : "FacilityToType",
+        "variable" : ["facility",
+        "loc"]
+      }]
+    },
+    {
+      "name" : "descriptions",
+      "source" : [{
+        "context" : "src",
+        "element" : "description",
+        "variable" : "description"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "description",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "description"
+        }]
+      }]
+    },
+    {
+      "name" : "parentOrganization",
+      "source" : [{
+        "context" : "src",
+        "element" : "parentOrganization",
+        "variable" : "po"
+      }],
+      "target" : [{
+        "contextType" : "variable",
+        "variable" : "loc",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "tgt"
+        }]
+      }],
+      "dependent" : [{
+        "name" : "ParentOrganizationToManagingOrganization",
+        "variable" : ["po",
+        "loc"]
+      }]
+    },
+    {
+      "name" : "facility",
+      "source" : [{
+        "context" : "src",
+        "element" : "facility",
+        "variable" : "facility"
+      }],
+      "target" : [{
+        "contextType" : "variable",
+        "variable" : "loc",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "tgt"
+        }]
+      }],
+      "dependent" : [{
+        "name" : "FacilityAddressConvert",
+        "variable" : ["facility",
+        "loc"]
+      }]
+    },
+    {
+      "name" : "facility",
+      "source" : [{
+        "context" : "src",
+        "element" : "facility",
+        "variable" : "facility"
+      }],
+      "target" : [{
+        "contextType" : "variable",
+        "variable" : "loc",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "tgt"
+        }]
+      }],
+      "dependent" : [{
+        "name" : "FacilityCoordinatesToPosition",
+        "variable" : ["facility",
+        "loc"]
+      }]
+    },
+    {
+      "name" : "contacts",
+      "source" : [{
+        "context" : "src",
+        "element" : "contacts",
+        "variable" : "contacts"
+      }],
+      "target" : [{
+        "contextType" : "variable",
+        "variable" : "loc",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "tgt"
+        }]
+      }],
+      "dependent" : [{
+        "name" : "ContactConvert",
+        "variable" : ["contacts",
+        "loc"]
+      }]
+    },
+    {
+      "name" : "operationHours",
+      "source" : [{
+        "context" : "src",
+        "element" : "operationHours",
+        "variable" : "oph"
+      }],
+      "target" : [{
+        "contextType" : "variable",
+        "variable" : "loc",
+        "transform" : "copy",
+        "parameter" : [{
+          "valueId" : "tgt"
+        }]
+      }],
+      "dependent" : [{
+        "name" : "OperationHoursConvert",
+        "variable" : ["oph",
+        "loc"]
+      }]
+    }]
+  },
+  {
+    "name" : "FacilityToType",
+    "typeMode" : "none",
+    "input" : [{
+      "name" : "src",
+      "mode" : "source"
+    },
+    {
+      "name" : "tgt",
+      "type" : "Location",
+      "mode" : "target"
+    }],
+    "rule" : [{
+      "name" : "c0",
+      "source" : [{
+        "context" : "src",
+        "element" : "facility",
+        "variable" : "facility"
+      }],
+      "rule" : [{
+        "name" : "categoryconcept",
+        "source" : [{
+          "context" : "facility",
+          "element" : "label",
+          "variable" : "label"
+        }],
+        "target" : [{
+          "context" : "tgt",
+          "contextType" : "variable",
+          "element" : "type",
+          "transform" : "cc",
+          "parameter" : [{
+            "valueString" : "http://snomed.info/sct"
+          },
+          {
+            "valueString" : "702887001"
+          },
+          {
+            "valueString" : "Neurology clinic"
+          }]
+        }]
+      }]
+    }]
+  },
+  {
+    "name" : "ParentOrganizationToManagingOrganization",
+    "typeMode" : "none",
+    "input" : [{
+      "name" : "src",
+      "mode" : "source"
+    },
+    {
+      "name" : "tgt",
+      "type" : "Location",
+      "mode" : "target"
+    }],
+    "rule" : [{
+      "name" : "c1",
+      "source" : [{
+        "context" : "src",
+        "element" : "parentOrganization"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "managingOrganization",
+        "variable" : "mo",
+        "transform" : "create",
+        "parameter" : [{
+          "valueString" : "Reference"
+        }]
+      }],
+      "rule" : [{
+        "name" : "refrences",
+        "source" : [{
+          "context" : "src",
+          "element" : "parentOrganization",
+          "variable" : "po"
+        }],
+        "target" : [{
+          "context" : "mo",
+          "contextType" : "variable",
+          "element" : "reference",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "po.id"
+          }]
+        }]
+      },
+      {
+        "name" : "displays",
+        "source" : [{
+          "context" : "src",
+          "element" : "parentOrganization",
+          "variable" : "po"
+        }],
+        "target" : [{
+          "context" : "mo",
+          "contextType" : "variable",
+          "element" : "display",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "po.name"
+          }]
+        }]
+      }]
+    }]
+  },
+  {
+    "name" : "FacilityAddressConvert",
+    "typeMode" : "none",
+    "input" : [{
+      "name" : "src",
+      "mode" : "source"
+    },
+    {
+      "name" : "tgt",
+      "type" : "Location",
+      "mode" : "target"
+    }],
+    "rule" : [{
+      "name" : "c3",
+      "source" : [{
+        "context" : "src",
+        "element" : "facility",
+        "variable" : "facility"
+      }],
+      "rule" : [{
+        "name" : "c2",
+        "source" : [{
+          "context" : "facility",
+          "element" : "addressDetail",
+          "variable" : "adrsd"
+        }],
+        "target" : [{
+          "context" : "tgt",
+          "contextType" : "variable",
+          "element" : "address",
+          "variable" : "adrs",
+          "transform" : "create",
+          "parameter" : [{
+            "valueString" : "Address"
+          }]
+        }],
+        "rule" : [{
+          "name" : "addresses",
+          "source" : [{
+            "context" : "adrsd",
+            "element" : "street",
+            "variable" : "street"
+          }],
+          "target" : [{
+            "context" : "adrs",
+            "contextType" : "variable",
+            "element" : "line",
+            "transform" : "copy",
+            "parameter" : [{
+              "valueId" : "street"
+            }]
+          }]
+        },
+        {
+          "name" : "cities",
+          "source" : [{
+            "context" : "adrsd",
+            "element" : "locality",
+            "variable" : "locality"
+          }],
+          "target" : [{
+            "context" : "adrs",
+            "contextType" : "variable",
+            "element" : "city",
+            "transform" : "copy",
+            "parameter" : [{
+              "valueId" : "locality"
+            }]
+          }]
+        },
+        {
+          "name" : "regions",
+          "source" : [{
+            "context" : "adrsd",
+            "element" : "region",
+            "variable" : "region"
+          }],
+          "target" : [{
+            "context" : "adrs",
+            "contextType" : "variable",
+            "element" : "district",
+            "transform" : "copy",
+            "parameter" : [{
+              "valueId" : "region"
+            }]
+          }]
+        },
+        {
+          "name" : "postalcodes",
+          "source" : [{
+            "context" : "adrsd",
+            "element" : "postalCode",
+            "variable" : "postalcode"
+          }],
+          "target" : [{
+            "context" : "adrs",
+            "contextType" : "variable",
+            "element" : "postalCode",
+            "transform" : "copy",
+            "parameter" : [{
+              "valueId" : "postalcode"
+            }]
+          }]
+        },
+        {
+          "name" : "countries",
+          "source" : [{
+            "context" : "adrsd",
+            "element" : "nation",
+            "variable" : "nation"
+          }],
+          "target" : [{
+            "context" : "adrs",
+            "contextType" : "variable",
+            "element" : "country",
+            "transform" : "copy",
+            "parameter" : [{
+              "valueId" : "nation"
+            }]
+          }]
+        }]
+      }]
+    }]
+  },
+  {
+    "name" : "FacilityCoordinatesToPosition",
+    "typeMode" : "none",
+    "input" : [{
+      "name" : "src",
+      "mode" : "source"
+    },
+    {
+      "name" : "tgt",
+      "type" : "Location",
+      "mode" : "target"
+    }],
+    "rule" : [{
+      "name" : "c5",
+      "source" : [{
+        "context" : "src",
+        "element" : "facility",
+        "variable" : "facility"
+      }],
+      "rule" : [{
+        "name" : "c4",
+        "source" : [{
+          "context" : "facility",
+          "element" : "coordinates",
+          "variable" : "coordinates"
+        }],
+        "target" : [{
+          "context" : "tgt",
+          "contextType" : "variable",
+          "element" : "position",
+          "variable" : "position",
+          "transform" : "create",
+          "parameter" : [{
+            "valueString" : "BackboneElement"
+          }]
+        }],
+        "rule" : [{
+          "name" : "latitudes",
+          "source" : [{
+            "context" : "coordinates",
+            "element" : "latitude",
+            "variable" : "latitude"
+          }],
+          "target" : [{
+            "context" : "position",
+            "contextType" : "variable",
+            "element" : "latitude",
+            "transform" : "copy",
+            "parameter" : [{
+              "valueId" : "latitude"
+            }]
+          }]
+        },
+        {
+          "name" : "longitudes",
+          "source" : [{
+            "context" : "coordinates",
+            "element" : "longitude",
+            "variable" : "longitude"
+          }],
+          "target" : [{
+            "context" : "position",
+            "contextType" : "variable",
+            "element" : "longitude",
+            "transform" : "copy",
+            "parameter" : [{
+              "valueId" : "longitude"
+            }]
+          }]
+        }]
+      }]
+    }]
+  },
+  {
+    "name" : "ContactConvert",
+    "typeMode" : "none",
+    "input" : [{
+      "name" : "src",
+      "mode" : "source"
+    },
+    {
+      "name" : "tgt",
+      "type" : "Location",
+      "mode" : "target"
+    }],
+    "rule" : [{
+      "name" : "c6",
+      "source" : [{
+        "context" : "src",
+        "element" : "contacts",
+        "variable" : "c"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "contact",
+        "variable" : "extcd",
+        "transform" : "create",
+        "parameter" : [{
+          "valueString" : "ExtendedContactDetail"
+        }]
+      },
+      {
+        "context" : "extcd",
+        "contextType" : "variable",
+        "element" : "telecom",
+        "variable" : "cp",
+        "transform" : "create",
+        "parameter" : [{
+          "valueString" : "ContactPoint"
+        }]
+      }],
+      "rule" : [{
+        "name" : "systems",
+        "source" : [{
+          "context" : "c",
+          "element" : "medium",
+          "variable" : "medium"
+        }],
+        "target" : [{
+          "context" : "cp",
+          "contextType" : "variable",
+          "element" : "system",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "medium"
+          }]
+        }]
+      },
+      {
+        "name" : "details",
+        "source" : [{
+          "context" : "c",
+          "element" : "details",
+          "variable" : "details"
+        }],
+        "target" : [{
+          "context" : "cp",
+          "contextType" : "variable",
+          "element" : "value",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "details"
+          }]
+        }]
+      },
+      {
+        "name" : "usage",
+        "source" : [{
+          "context" : "c",
+          "element" : "usage",
+          "variable" : "usage"
+        }],
+        "target" : [{
+          "context" : "cp",
+          "contextType" : "variable",
+          "element" : "use",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "usage"
+          }]
+        }]
+      }]
+    }]
+  },
+  {
+    "name" : "OperationHoursConvert",
+    "typeMode" : "none",
+    "input" : [{
+      "name" : "src",
+      "mode" : "source"
+    },
+    {
+      "name" : "tgt",
+      "type" : "Location",
+      "mode" : "target"
+    }],
+    "rule" : [{
+      "name" : "c7",
+      "source" : [{
+        "context" : "src",
+        "element" : "operationHours",
+        "variable" : "oph"
+      }],
+      "target" : [{
+        "context" : "tgt",
+        "contextType" : "variable",
+        "element" : "hoursOfOperation",
+        "variable" : "avl",
+        "transform" : "create",
+        "parameter" : [{
+          "valueString" : "Availability"
+        }]
+      },
+      {
+        "context" : "avl",
+        "contextType" : "variable",
+        "element" : "availableTime",
+        "variable" : "availableTime",
+        "transform" : "create",
+        "parameter" : [{
+          "valueString" : "Availability.availableTime"
+        }]
+      }],
+      "rule" : [{
+        "name" : "opendays",
+        "source" : [{
+          "context" : "oph",
+          "element" : "days",
+          "variable" : "days"
+        }],
+        "target" : [{
+          "context" : "availableTime",
+          "contextType" : "variable",
+          "element" : "daysOfWeek",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "days"
+          }]
+        }]
+      },
+      {
+        "name" : "opentimes",
+        "source" : [{
+          "context" : "oph",
+          "element" : "openTime",
+          "variable" : "opentime"
+        }],
+        "target" : [{
+          "context" : "availableTime",
+          "contextType" : "variable",
+          "element" : "availableStartTime",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "opentime"
+          }]
+        }]
+      },
+      {
+        "name" : "closetimes",
+        "source" : [{
+          "context" : "oph",
+          "element" : "closeTime",
+          "variable" : "closetime"
+        }],
+        "target" : [{
+          "context" : "availableTime",
+          "contextType" : "variable",
+          "element" : "availableEndTime",
+          "transform" : "copy",
+          "parameter" : [{
+            "valueId" : "closetime"
+          }]
+        }]
+      }]
+    }]
+  }]
+}

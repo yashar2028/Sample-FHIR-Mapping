@@ -1,0 +1,90 @@
+{
+  "resourceType": "Location",
+  "identifier": [
+    {
+      "value": "NEURO-CLINIC"
+    }
+  ],
+  "status": "active",
+  "name": "Neurology Clinic",
+  "alias": [
+    "Clinic"
+  ],
+  "description": "Focused on neurological care, including diagnostics, outpatient services, and follow-up care for neurological disorders.",
+  "type": [
+    {
+      "coding": [
+        {
+          "system": "http://snomed.info/sct",
+          "code": "702887001",
+          "display": "Neurology clinic"
+        }
+      ]
+    }
+  ],
+  "contact": [
+    {
+      "telecom": [
+        {
+          "system": "phone",
+          "value": "555-6789",
+          "use": "work"
+        }
+      ]
+    },
+    {
+      "telecom": [
+        {
+          "system": "email",
+          "value": "neurology@metrohealth.org",
+          "use": "work"
+        }
+      ]
+    }
+  ],
+  "address": {
+    "line": [
+      "456 Brain Blvd",
+      "Suite 300"
+    ],
+    "city": "Springfield",
+    "district": "IL",
+    "postalCode": "62701",
+    "country": "USA"
+  },
+  "position": {
+    "longitude": -89.6501,
+    "latitude": 39.7817
+  },
+  "managingOrganization": {
+    "reference": "Organization/org-987",
+    "display": "Metro Health Network"
+  },
+  "hoursOfOperation": [
+    {
+      "availableTime": [
+        {
+          "daysOfWeek": [
+            "mon",
+            "wed",
+            "fri"
+          ],
+          "availableStartTime": "09:00:00",
+          "availableEndTime": "17:00:00"
+        }
+      ]
+    },
+    {
+      "availableTime": [
+        {
+          "daysOfWeek": [
+            "tue",
+            "thu"
+          ],
+          "availableStartTime": "10:00:00",
+          "availableEndTime": "16:00:00"
+        }
+      ]
+    }
+  ]
+}

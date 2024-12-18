@@ -1,15 +1,16 @@
 map "http://example.org/fhir/StructureMap/location-mapping" = "locmapping" // example.org just as a place holder (will be passed to -ig parameter)
 
-// Metadata for reference (not parsed by the tool):
+// Meta:
 // url = "http://example.org/fhir/StructureMap/location-mapping"
 // name = "LocationMapping"
 // title = "FML Conversion for CareUnit to Location"
+// status = "draft"
 
 uses "http://example.org/fhir/StructureDefinition/CareUnit" alias CareUnit as source
 uses "http://hl7.org/fhir/StructureDefinition/Location" alias Location as target
 
 group RootContent(source src : CareUnit, target tgt : Location) {
-  src -> tgt.status = "draft" "status";
+  src -> tgt.status = "active" "status";
   src.identifier as identifier -> tgt.identifier = create("Identifier") as id, id.value = identifier "identifiers";
   src.title as title -> tgt.name = title "namings";
   src.category as category -> tgt.alias = category "categories";
@@ -25,7 +26,7 @@ group RootContent(source src : CareUnit, target tgt : Location) {
 
 group FacilityToType(source src, target tgt : Location) {
   src.facility as facility then {
-    facility.label as label -> tgt.type = cc('http://snomed.info/sct','702887001', label) "categoryconcept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
+    facility.label as label -> tgt.type = cc('http://snomed.info/sct','702887001', 'Neurology clinic') "categoryconcept"; // Construct a CodeableConcept model with (<codesystem url>,<code>,<display>) 
   } "c0"; 
 }
 
@@ -39,7 +40,8 @@ group ParentOrganizationToManagingOrganization(source src, target tgt : Location
 group FacilityAddressConvert(source src, target tgt : Location) {
   src.facility as facility then {  
     facility.addressDetail as adrsd -> tgt.address = create("Address") as adrs then {
-      adrsd.street as street, adrsd.locality as locality-> adrs.line = street "addresses"; // street is a list in source so we join items on ', '
+      adrsd.street as street -> adrs.line = street "addresses"; // street is a list and is directly passed
+      adrsd.locality as locality -> adrs.city = locality "cities";
       adrsd.region as region -> adrs.district = region "regions";
       adrsd.postalCode as postalcode -> adrs.postalCode = postalcode "postalcodes";
       adrsd.nation as nation -> adrs.country = nation "countries";
@@ -56,7 +58,6 @@ group FacilityCoordinatesToPosition(source src, target tgt : Location) {
   } "c5"; 
 }
 
-// Iterate over list of contacts. In the below expression += means creating ExtendedContactDetail object with regard to number of contacts item in source.
 group ContactConvert(source src, target tgt: Location) { // Only the telecom field (type ContactPoint) of ExtendedContactDetail will be filled.
   src.contacts as c -> tgt.contact = create("ExtendedContactDetail") as extcd, extcd.telecom = create("ContactPoint") as cp then {
     c.medium as medium -> cp.system = medium "systems";
